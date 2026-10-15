@@ -1,13 +1,171 @@
-#Verificar se esá funcionando
 kubectl version --client
-kubectl get nodes
-#Resposta
-Versão do kubectl: v1.37.1 (Kustomize v5.8.1).
-
-#Criar aplicação
-kubectl create deployment web-aula5 --image=nginx:alpine
-kubectl get deployments
-#resposta
+Client Version: v1.37.1
+Kustomize Version: v5.8.1
+root@controlplane:~$ kubectl get nodes
 NAME           STATUS   ROLES           AGE   VERSION
 controlplane   Ready    control-plane   9d    v1.37.1
 node01         Ready    <none>          9d    v1.37.1
+root@controlplane:~$ kubectl create deployment web-aula5 --image=nginx:alpine
+deployment.apps/web-aula5 created
+root@controlplane:~$ kubectl get deployments
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+web-aula5   1/1     1            1           8s
+root@controlplane:~$ kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+web-aula5-779c6f9566-6nx6q   1/1     Running   0          26s
+root@controlplane:~$ kubectl get pods -o wide
+NAME                         READY   STATUS    RESTARTS   AGE   IP             NODE     NOMINATED NODE   READINESS GATES
+web-aula5-779c6f9566-6nx6q   1/1     Running   0          37s   192.168.1.64   node01   <none>           <none>
+root@controlplane:~$ kubectl describe pod $(kubectl get pods -0 jsonpath='{.items[0].metadata.name}')
+error: unknown shorthand flag: '0' in -0
+See 'kubectl get --help' for usage.
+Name:             web-aula5-779c6f9566-6nx6q
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             node01/172.30.2.2
+Start Time:       Wed, 14 Oct 2026 23:51:56 +0000
+Labels:           app=web-aula5
+                  pod-template-hash=779c6f9566
+Annotations:      <none>
+Status:           Running
+IP:               192.168.1.64
+IPs:
+  IP:           192.168.1.64
+Controlled By:  ReplicaSet/web-aula5-779c6f9566
+Containers:
+  nginx:
+    Container ID:   containerd://657d875291cf68e3016c0d4afbf9ef4e700c7fc46c0482ed9bc8d7fc93502425
+    Image:          nginx:alpine
+    Image ID:       docker.io/library/nginx@sha256:72aeb3308ef6cb3118242fb16389518923916dfa206e32d1a8377acc328b9870
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Wed, 14 Oct 2026 23:52:03 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-qb29r (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-qb29r:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  111s  default-scheduler  Successfully assigned default/web-aula5-779c6f9566-6nx6q to node01
+  Normal  Pulling    109s  kubelet            spec.containers{nginx}: Pulling image "nginx:alpine"
+  Normal  Pulled     104s  kubelet            spec.containers{nginx}: Successfully pulled image "nginx:alpine" in 4.707s (4.707s including waiting). Image size: 28826677 bytes.
+  Normal  Created    104s  kubelet            spec.containers{nginx}: Container created
+  Normal  Started    104s  kubelet            spec.containers{nginx}: Container started
+root@controlplane:~$ kubectl scale deployment web-aula5 --replicas=3
+deployment.apps/web-aula5 scaled
+root@controlplane:~$ kubectl get pods -o wide
+NAME                         READY   STATUS    RESTARTS   AGE     IP              NODE     NOMINATED NODE   READINESS GATES
+web-aula5-779c6f9566-6nx6q   1/1     Running   0          2m32s   192.168.1.64    node01   <none>           <none>
+web-aula5-779c6f9566-794hp   1/1     Running   0          15s     192.168.1.204   node01   <none>           <none>
+web-aula5-779c6f9566-wnkvm   1/1     Running   0          15s     192.168.1.6     node01   <none>           <none>
+root@controlplane:~$ kubectl get deployment,replicaset,pods 
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/web-aula5   3/3     3            3           2m47s
+
+NAME                                   DESIRED   CURRENT   READY   AGE
+replicaset.apps/web-aula5-779c6f9566   3         3         3       2m46s
+
+NAME                             READY   STATUS    RESTARTS   AGE
+pod/web-aula5-779c6f9566-6nx6q   1/1     Running   0          2m46s
+pod/web-aula5-779c6f9566-794hp   1/1     Running   0          29s
+pod/web-aula5-779c6f9566-wnkvm   1/1     Running   0          29s
+root@controlplane:~$ kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+web-aula5-779c6f9566-6nx6q   1/1     Running   0          2m56s
+web-aula5-779c6f9566-794hp   1/1     Running   0          39s
+web-aula5-779c6f9566-wnkvm   1/1     Running   0          39s
+root@controlplane:~$ kubectl delete pod $(kubectl get pods -o jsonpath='{.items[0].metadata.name}')
+pod "web-aula5-779c6f9566-6nx6q" deleted from default namespace
+root@controlplane:~$ kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+web-aula5-779c6f9566-794hp   1/1     Running   0          112s
+web-aula5-779c6f9566-vj78x   1/1     Running   0          7s
+web-aula5-779c6f9566-wnkvm   1/1     Running   0          112s
+root@controlplane:~$ kubectl expose deployment web-aula5 --port=80 --target-port=80 --name=web-service
+service/web-service exposed
+root@controlplane:~$ kubectl get service web-service
+NAME          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+web-service   ClusterIP   10.107.118.238   <none>        80/TCP    10s
+root@controlplane:~$ kubectl run teste --image=curlimages/curl --rm -it --restart=Never -- \
+> curl http://web-service
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, nginx is successfully installed and working.
+Further configuration is required for the web server, reverse proxy, 
+API gateway, load balancer, content cache, or other features.</p>
+
+<p>For online documentation and support please refer to
+<a href="https://nginx.org/">nginx.org</a>.<br/>
+To engage with the community please visit
+<a href="https://community.nginx.org/">community.nginx.org</a>.<br/>
+For enterprise grade support, professional services, additional 
+security features and capabilities please refer to
+<a href="https://f5.com/nginx">f5.com/nginx</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+Session ended, resume using 'kubectl attach teste -c teste -n default -i -t' command
+pod "teste" deleted from default namespace
+root@controlplane:~$ kubectl scale deployment web-aula5 --replicas=5
+deployment.apps/web-aula5 scaled
+root@controlplane:~$ kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+web-aula5-779c6f9566-794hp   1/1     Running   0          5m33s
+web-aula5-779c6f9566-9pkmr   1/1     Running   0          10s
+web-aula5-779c6f9566-cx8qx   1/1     Running   0          10s
+web-aula5-779c6f9566-vj78x   1/1     Running   0          3m48s
+web-aula5-779c6f9566-wnkvm   1/1     Running   0          5m33s
+root@controlplane:~$ kubectl delete pod $(kubectl get pods -o jsonpath='{.items[0].metadata.name}')
+pod "web-aula5-779c6f9566-794hp" deleted from default namespace
+root@controlplane:~$ kubectl get pods
+NAME                         READY   STATUS    RESTARTS   AGE
+web-aula5-779c6f9566-8xcn6   1/1     Running   0          10s
+web-aula5-779c6f9566-9pkmr   1/1     Running   0          77s
+web-aula5-779c6f9566-cx8qx   1/1     Running   0          77s
+web-aula5-779c6f9566-vj78x   1/1     Running   0          4m55s
+web-aula5-779c6f9566-wnkvm   1/1     Running   0          6m40s
+root@controlplane:~$ kubectl delete service web-service
+service "web-service" deleted from default namespace
+root@controlplane:~$ kubectl delete deployment web-aula5
+deployment.apps "web-aula5" deleted from default namespace
+root@controlplane:~$ kubectl get pods
+No resources found in default namespace.
+root@controlplane:~$ kubectl get services
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   9d
+root@controlplane:~$
