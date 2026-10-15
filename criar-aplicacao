@@ -1,0 +1,13 @@
+#Verificar se esá funcionando
+kubectl version --client
+kubectl get nodes
+#Resposta
+Versão do kubectl: v1.37.1 (Kustomize v5.8.1).
+
+#Criar aplicação
+kubectl create deployment web-aula5 --image=nginx:alpine
+kubectl get deployments
+#resposta
+NAME           STATUS   ROLES           AGE   VERSION
+controlplane   Ready    control-plane   9d    v1.37.1
+node01         Ready    <none>          9d    v1.37.1
