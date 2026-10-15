@@ -169,3 +169,63 @@ root@controlplane:~$ kubectl get services
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
 kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   9d
 root@controlplane:~$
+
+
+1. Verificando a Versão e os Nós do Cluster
+Bash
+kubectl version --client
+kubectl get nodes
+O que significa no Killercoda: Você começa checando se a sua ferramenta (kubectl) está instalada e qual versão do Kubernetes está rodando. Em seguida, roda kubectl get nodes para ver os computadores (nós) que formam o seu laboratório.
+
+O que o cluster respondeu: Mostrou que o cliente é a versão v1.37.1 e que existem dois nós ativos e prontos (Ready): o controlplane (onde você digita os comandos) e o node01 (onde as aplicações rodam).
+
+2. Criando o seu Primeiro Deployment
+Bash
+kubectl create deployment web-aula5 --image=nginx:alpine
+O que significa no Killercoda: Você pediu para o Kubernetes criar um Deployment chamado web-aula5 usando a imagem leve do servidor web Nginx (nginx:alpine). O Deployment funciona como um "gerente" que garante que a sua aplicação vai continuar rodando.
+
+O que o cluster respondeu: deployment.apps/web-aula5 created. O gerente assumiu o controle e colocou 1 réplica no ar.
+
+3. Visualizando os Pods e onde eles rodam
+Bash
+kubectl get pods
+kubectl get pods -o wide
+O que significa no Killercoda: Você quis ver os Pods (as menores unidades do Kubernetes, que dentro carregam o seu container Nginx). Com o parâmetro -o wide, você pediu detalhes extras, como o endereço IP e em qual nó o pod foi parar.
+
+O que o cluster respondeu: Mostrou o pod web-aula5-779c6f9566-6nx6q com status Running (rodando), rodando especificamente no node01 e com o IP interno 192.168.1.64.
+
+4. O Erro de Digitação proposital ou acidental
+Bash
+kubectl describe pod $(kubectl get pods -0 jsonpath='{.items[0].metadata.name}')
+O que significa no Killercoda: Você tentou pegar o nome do pod de forma automática usando um comando avançado com jsonpath para inspecioná-lo com o describe. Porém, você digitou -0 (com o número zero) em vez de -o (com a letra o).
+
+O que o cluster respondeu: Devolveu um erro dizendo que não conhece a bandeira -0 (error: unknown shorthand flag: '0' in -0).
+
+5. Testando a Resiliência (Deletando um Pod)
+Bash
+kubectl scale deployment web-aula5 --replicas=3
+kubectl delete pod web-aula5-779c6f9566-6nx6q
+O que significa no Killercoda: Primeiro, você aumentou o número de réplicas para 3. Depois, você resolveu testar o "superpoder" do Kubernetes: deletou um dos pods manualmente para ver o que o gerenciador (Deployment/ReplicaSet) faria.
+
+O que o cluster respondeu: Assim que você deletou o pod, o ReplicaSet percebeu que o número de pods caiu para 2 (sendo que o desejado eram 3) e criou um novo pod instantaneamente (vj78x) para repor o lugar.
+
+6. Criando um Service e Testando com o curl
+Bash
+kubectl expose deployment web-aula5 --port=80 --target-port=80 --name=web-service
+kubectl run teste --image=curlimages/curl --rm -it --restart=Never -- curl http://web-service
+O que significa no Killercoda:
+
+Você criou um Service (web-service) do tipo ClusterIP para servir como um ponto de acesso interno e balanceador de carga para os seus pods do Nginx.
+
+Para testar se a rede interna funcionava sem precisar sair do terminal, você rodou um pod efêmero temporário chamado teste usando uma imagem de curl para acessar o serviço (http://web-service).
+
+O que o cluster respondeu: O curl bateu no serviço interno, que roteou a requisição para um dos pods do Nginx, exibindo no terminal o código HTML completo da página de boas-vindas ("Welcome to nginx!"). O parâmetro --rm garantiu que o pod de teste fosse apagado logo após o fim do teste.
+
+7. Escalando para 5 Réplicas e Limpando o Ambiente
+Bash
+kubectl scale deployment web-aula5 --replicas=5
+kubectl delete service web-service
+kubectl delete deployment web-aula5
+O que significa no Killercoda: Você praticou escalar a aplicação para 5 instâncias e depois executou os comandos de limpeza (delete) para apagar tudo o que criou e deixar o cluster zerado para a próxima aula.
+
+O que o cluster respondeu: Confirmou a exclusão e, ao rodar kubectl get pods e kubectl get services, mostrou que o ambiente voltou ao estado original, contendo apenas o serviço padrão do Kubernetes.
