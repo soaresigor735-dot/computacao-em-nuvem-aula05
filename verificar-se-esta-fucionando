@@ -1,0 +1,5 @@
+#Verificar se esá funcionando
+kubectl version --client
+kubectl get nodes
+#Resposta
+Versão do kubectl: v1.37.1 (Kustomize v5.8.1).
